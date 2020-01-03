@@ -41,7 +41,7 @@ public class ConsumeQueue {
     private final String storePath;
     private final int mappedFileSize;
     private long maxPhysicOffset = -1;
-    private volatile long minLogicOffset = 0;
+    private volatile long minLogicOffset = 0;// 这个offset是ConsumeQueue的offset(没有乘以20)
     private ConsumeQueueExt consumeQueueExt = null;
 
     public ConsumeQueue(

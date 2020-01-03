@@ -1222,6 +1222,9 @@ public class DefaultMessageStore implements MessageStore {
 
     private void addScheduleTask() {
 
+        /**
+         * 定期删除文件
+         */
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -1229,6 +1232,7 @@ public class DefaultMessageStore implements MessageStore {
             }
         }, 1000 * 60, this.messageStoreConfig.getCleanResourceInterval(), TimeUnit.MILLISECONDS);
 
+        // 定期检测所有的commitlog文件是不是1G，所有的consumequeue文件是不是30W*20 byte
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -1536,11 +1540,21 @@ public class DefaultMessageStore implements MessageStore {
 
         private void deleteExpiredFiles() {
             int deleteCount = 0;
+            // commitlog保存时间，默认72小时，可配置
             long fileReservedTime = DefaultMessageStore.this.getMessageStoreConfig().getFileReservedTime();
+            // 删除commitlog文件的时间间隔，删除一个文件后等多久再删除下一个，默认100ms
             int deletePhysicFilesInterval = DefaultMessageStore.this.getMessageStoreConfig().getDeleteCommitLogFilesInterval();
+            /**
+             * 销毁MappedFile被拒绝的最大存活时间，默认120s。清除过期文件线程在初次销毁mappedfile时，
+             * 如果该文件被其他线程引用，引用次数大于0.则设置MappedFile的可用状态为false，
+             * 并设置第一次删除时间，下一次清理任务到达时，如果系统时间大于初次删除时间加上本参数，
+             * 则将ref次数一次减1000，知道引用次数小于0，则释放物理资源
+             */
             int destroyMapedFileIntervalForcibly = DefaultMessageStore.this.getMessageStoreConfig().getDestroyMapedFileIntervalForcibly();
 
+            // 是不是删除commitlog的小时（默认是凌晨4点删，也就是当前时间是不是4:00-4:59）
             boolean timeup = this.isTimeToDelete();
+            // 磁盘是否满了
             boolean spacefull = this.isSpaceToDelete();
             boolean manualDelete = this.manualDeleteFileSeveralTimes > 0;
 

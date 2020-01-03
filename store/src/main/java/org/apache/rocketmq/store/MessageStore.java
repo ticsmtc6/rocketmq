@@ -26,11 +26,13 @@ import org.apache.rocketmq.store.stats.BrokerStatsManager;
 
 /**
  * This class defines contracting interfaces to implement, allowing third-party vendor to use customized message store.
+ * ConsumeQueue中的offset是未乘以20（consumeQueue中每个消息所占空间）以前的值,未明确表明的offset都是指的ConsumeQueue中的offset
  */
 public interface MessageStore {
 
     /**
      * Load previously stored messages.
+     * 加载保存的commitlog和consumequeue
      *
      * @return true if success; false otherwise.
      */
@@ -38,6 +40,7 @@ public interface MessageStore {
 
     /**
      * Launch this message store.
+     * 启动存储服务
      *
      * @throws Exception if there is any error.
      */
@@ -45,16 +48,19 @@ public interface MessageStore {
 
     /**
      * Shutdown this message store.
+     * 停止存储服务
      */
     void shutdown();
 
     /**
      * Destroy this message store. Generally, all persistent files should be removed after invocation.
+     * 销毁存储服务，会删除保存了的文件
      */
     void destroy();
 
     /**
      * Store a message into store.
+     * 存储一条消息到磁盘
      *
      * @param msg Message instance to store
      * @return result of store operation.
@@ -63,6 +69,7 @@ public interface MessageStore {
 
     /**
      * Store a batch of messages.
+     * 存储一批消息
      *
      * @param messageExtBatch Message batch.
      * @return result of storing batch messages.
@@ -72,11 +79,12 @@ public interface MessageStore {
     /**
      * Query at most <code>maxMsgNums</code> messages belonging to <code>topic</code> at <code>queueId</code> starting
      * from given <code>offset</code>. Resulting messages will further be screened using provided message filter.
+     * 查询topic指定queue，从offset偏移量开始最多返回maxMsgNums条
      *
      * @param group Consumer group that launches this query.
      * @param topic Topic to query.
      * @param queueId Queue ID to query.
-     * @param offset Logical offset to start from.
+     * @param offset Logical offset to start from.这个offset是ConsumeQueue的offset(没有乘以20)
      * @param maxMsgNums Maximum count of messages to query.
      * @param messageFilter Message filter used to screen desired messages.
      * @return Matched messages.
@@ -86,28 +94,31 @@ public interface MessageStore {
 
     /**
      * Get maximum offset of the topic queue.
+     * topic指定queue的consumeQueue最大偏移量
      *
      * @param topic Topic name.
      * @param queueId Queue ID.
-     * @return Maximum offset at present.
+     * @return Maximum offset at present.这个offset是ConsumeQueue的offset(没有乘以20)
      */
     long getMaxOffsetInQueue(final String topic, final int queueId);
 
     /**
      * Get the minimum offset of the topic queue.
+     * topic指定queue的consumeQueue最小偏移量
      *
      * @param topic Topic name.
      * @param queueId Queue ID.
-     * @return Minimum offset at present.
+     * @return Minimum offset at present.这个offset是ConsumeQueue的offset(没有乘以20)
      */
     long getMinOffsetInQueue(final String topic, final int queueId);
 
     /**
      * Get the offset of the message in the commit log, which is also known as physical offset.
+     * 根据consumeQueue偏移量返回commitlog偏移量
      *
      * @param topic Topic of the message to lookup.
      * @param queueId Queue ID.
-     * @param consumeQueueOffset offset of consume queue.
+     * @param consumeQueueOffset offset of consume queue.这个offset是ConsumeQueue的offset(没有乘以20)
      * @return physical offset.
      */
     long getCommitLogOffsetInQueue(final String topic, final int queueId, final long consumeQueueOffset);
