@@ -125,6 +125,7 @@ public interface MessageStore {
 
     /**
      * Look up the physical offset of the message whose store timestamp is as specified.
+     * 根据时间查找consumeQueueOffset，这个offset是ConsumeQueue的offset(没有乘以20)
      *
      * @param topic Topic of the message.
      * @param queueId Queue ID.
@@ -135,6 +136,7 @@ public interface MessageStore {
 
     /**
      * Look up the message by given commit log offset.
+     * 查找commitlog指定偏移量的消息
      *
      * @param commitLogOffset physical offset.
      * @return Message whose physical offset is as specified.
@@ -143,6 +145,7 @@ public interface MessageStore {
 
     /**
      * Get one message from the specified commit log offset.
+     * 查找commitlog指定偏移量的消息，消息未decode
      *
      * @param commitLogOffset commit log offset.
      * @return wrapped result of the message.
@@ -151,6 +154,7 @@ public interface MessageStore {
 
     /**
      * Get one message from the specified commit log offset.
+     * 查找commitlog指定偏移量的消息，消息未decode,跟上一个的区别是不需要读取计算消息长度，直接读取消息体
      *
      * @param commitLogOffset commit log offset.
      * @param msgSize message size.
@@ -174,6 +178,7 @@ public interface MessageStore {
 
     /**
      * Get the maximum commit log offset.
+     * 当前保存的commitlog文件中目前写到的最大offset
      *
      * @return maximum commit log offset.
      */
@@ -181,6 +186,7 @@ public interface MessageStore {
 
     /**
      * Get the minimum commit log offset.
+     * 当前保存的commitlog文件中最小offset
      *
      * @return minimum commit log offset.
      */
@@ -188,6 +194,7 @@ public interface MessageStore {
 
     /**
      * Get the store time of the earliest message in the given queue.
+     * 查找topic指定queue中，当前保存在commitlog的最早消息的时间
      *
      * @param topic Topic of the messages to query.
      * @param queueId Queue ID to find.
