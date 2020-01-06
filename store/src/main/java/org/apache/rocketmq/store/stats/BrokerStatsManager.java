@@ -183,6 +183,13 @@ public class BrokerStatsManager {
         this.momentStatsItemSetFallTime.getAndCreateStatsItem(statsKey).getValue().set(fallBehind);
     }
 
+    /**
+     * 记录当前拉取消息记录的offset落后commitlog最大offset多少
+     * @param group
+     * @param topic
+     * @param queueId
+     * @param fallBehind
+     */
     public void recordDiskFallBehindSize(final String group, final String topic, final int queueId,
         final long fallBehind) {
         final String statsKey = String.format("%d@%s@%s", queueId, topic, group);
