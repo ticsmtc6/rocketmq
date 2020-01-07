@@ -44,9 +44,11 @@ import org.slf4j.LoggerFactory;
  */
 public class CommitLog {
     // Message's MAGIC CODE daa320a7
+    // 正常消息
     public final static int MESSAGE_MAGIC_CODE = 0xAABBCCDD ^ 1880681586 + 8;
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     // End of file empty MAGIC CODE cbd43194
+    // 文件结尾，空消息
     private final static int BLANK_MAGIC_CODE = 0xBBCCDDEE ^ 1880681586 + 8;
     private final MappedFileQueue mappedFileQueue;
     private final DefaultMessageStore defaultMessageStore;
@@ -520,9 +522,11 @@ public class CommitLog {
 
     public PutMessageResult putMessage(final MessageExtBrokerInner msg) {
         // Set the storage time
+        // 设置消息存储时间
         msg.setStoreTimestamp(System.currentTimeMillis());
         // Set the message body BODY CRC (consider the most appropriate setting
         // on the client)
+        // 设置body crc
         msg.setBodyCRC(UtilAll.crc32(msg.getBody()));
         // Back to Results
         AppendMessageResult result = null;
@@ -536,16 +540,21 @@ public class CommitLog {
         if (tranType == MessageSysFlag.TRANSACTION_NOT_TYPE
             || tranType == MessageSysFlag.TRANSACTION_COMMIT_TYPE) {
             // Delay Delivery
+            // 延迟消息处理
             if (msg.getDelayTimeLevel() > 0) {
                 if (msg.getDelayTimeLevel() > this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel()) {
                     msg.setDelayTimeLevel(this.defaultMessageStore.getScheduleMessageService().getMaxDelayLevel());
                 }
 
+                // 修改topic为延迟队列topic
                 topic = ScheduleMessageService.SCHEDULE_TOPIC;
+                // 根据延迟级别找到该延迟级别对应的queueId
                 queueId = ScheduleMessageService.delayLevel2QueueId(msg.getDelayTimeLevel());
 
                 // Backup real topic, queueId
+                // 消息真正topic作为属性保存，便于从延迟队列投递到该队列
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_TOPIC, msg.getTopic());
+                // 同上
                 MessageAccessor.putProperty(msg, MessageConst.PROPERTY_REAL_QUEUE_ID, String.valueOf(msg.getQueueId()));
                 msg.setPropertiesString(MessageDecoder.messageProperties2String(msg.getProperties()));
 
@@ -556,15 +565,19 @@ public class CommitLog {
 
         long eclipseTimeInLock = 0;
         MappedFile unlockMappedFile = null;
+        // 查找到当前的最后一个MappedFile
         MappedFile mappedFile = this.mappedFileQueue.getLastMappedFile();
 
+        // 加锁
         putMessageLock.lock(); //spin or ReentrantLock ,depending on store config
         try {
+            // 记录加锁时间
             long beginLockTimestamp = this.defaultMessageStore.getSystemClock().now();
             this.beginTimeInLock = beginLockTimestamp;
 
             // Here settings are stored timestamp, in order to ensure an orderly
             // global
+            // 存储时间，保证全局有序
             msg.setStoreTimestamp(beginLockTimestamp);
 
             if (null == mappedFile || mappedFile.isFull()) {

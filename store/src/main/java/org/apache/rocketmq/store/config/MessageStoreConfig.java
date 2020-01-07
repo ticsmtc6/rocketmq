@@ -130,6 +130,7 @@ public class MessageStoreConfig {
     private long flushDelayOffsetInterval = 1000 * 10;
     @ImportantField
     private boolean cleanFileForciblyEnable = true;
+    // 是否温和地使用 MappedFile如果为true,将不强制将内存映射文件锁定在内存中
     private boolean warmMapedFileEnable = false;
     private boolean offsetCheckInSlave = false;
     private boolean debugLockEnable = false;
@@ -138,6 +139,7 @@ public class MessageStoreConfig {
     private long osPageCacheBusyTimeOutMills = 1000;
     private int defaultQueryMaxNum = 32;
 
+    // Commitlog是否开启 transientStorePool机制,默认为 false
     @ImportantField
     private boolean transientStorePoolEnable = false;
     private int transientStorePoolSize = 5;

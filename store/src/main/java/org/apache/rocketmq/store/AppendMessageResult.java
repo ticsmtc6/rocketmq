@@ -18,22 +18,37 @@ package org.apache.rocketmq.store;
 
 /**
  * When write a message to the commit log, returns results
+ * 追加消息到commitlog后的结果
  */
 public class AppendMessageResult {
     // Return code
     private AppendMessageStatus status;
     // Where to start writing
+    /**
+     * 开始写的位置
+     * 是真正的物理位置，参考CommitLog的调用，是fileFromOffset + byteBuffer.position();
+     */
     private long wroteOffset;
     // Write Bytes
+    //写了多少个字节
     private int wroteBytes;
     // Message ID
+    //消息id
     private String msgId;
     // Message storage timestamp
+    //消息存储的时间
     private long storeTimestamp;
     // Consume queue's offset(step by one)
+    /**
+     * 消息的逻辑地址，代表是topic-queueId这个队列中的第几个位置，即下标
+     */
     private long logicsOffset;
     private long pagecacheRT = 0;
 
+    /**
+     * 写入的消息数量，默认是1
+     * 只有在处理批量消息MessageExtBatch时，会设置为其他值
+     */
     private int msgNum = 1;
 
     public AppendMessageResult(AppendMessageStatus status) {

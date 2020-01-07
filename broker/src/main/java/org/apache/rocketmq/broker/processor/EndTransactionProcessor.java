@@ -54,6 +54,7 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
 
         if (requestHeader.getFromTransactionCheck()) {
             switch (requestHeader.getCommitOrRollback()) {
+                // 未知状态
                 case MessageSysFlag.TRANSACTION_NOT_TYPE: {
                     LOGGER.warn("check producer[{}] transaction state, but it's pending status."
                             + "RequestHeader: {} Remark: {}",
@@ -63,6 +64,7 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
                     return null;
                 }
 
+                // producer commit
                 case MessageSysFlag.TRANSACTION_COMMIT_TYPE: {
                     LOGGER.warn("check producer[{}] transaction state, the producer commit the message."
                             + "RequestHeader: {} Remark: {}",
@@ -73,6 +75,7 @@ public class EndTransactionProcessor implements NettyRequestProcessor {
                     break;
                 }
 
+                //producer rollback
                 case MessageSysFlag.TRANSACTION_ROLLBACK_TYPE: {
                     LOGGER.warn("check producer[{}] transaction state, the producer rollback the message."
                             + "RequestHeader: {} Remark: {}",
