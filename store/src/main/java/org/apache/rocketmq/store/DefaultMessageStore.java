@@ -1649,21 +1649,26 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    // 负责ConsumeQueue刷盘
     class FlushConsumeQueueService extends ServiceThread {
         private static final int RETRY_TIMES_OVER = 3;
         private long lastFlushTimestamp = 0;
 
         private void doFlush(int retryTimes) {
+            // 默认2页
             int flushConsumeQueueLeastPages = DefaultMessageStore.this.getMessageStoreConfig().getFlushConsumeQueueLeastPages();
 
+            // 正常情况调用当前函数传入的参数retryTimes值都为1，只有异常或者关闭时传的retryTimes为3，此时应该强刷flush
             if (retryTimes == RETRY_TIMES_OVER) {
                 flushConsumeQueueLeastPages = 0;
             }
 
             long logicsMsgTimestamp = 0;
 
+            // 60s
             int flushConsumeQueueThoroughInterval = DefaultMessageStore.this.getMessageStoreConfig().getFlushConsumeQueueThoroughInterval();
             long currentTimeMillis = System.currentTimeMillis();
+            // 上次刷盘时间与当前时间差超过指定值，强制刷盘
             if (currentTimeMillis >= (this.lastFlushTimestamp + flushConsumeQueueThoroughInterval)) {
                 this.lastFlushTimestamp = currentTimeMillis;
                 flushConsumeQueueLeastPages = 0;
@@ -1718,6 +1723,7 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    // 重放，负责从commitlog中读取信息构建ConsumeQueue,IndexService
     class ReputMessageService extends ServiceThread {
 
         private volatile long reputFromOffset = 0;
