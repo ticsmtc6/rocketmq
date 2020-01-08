@@ -580,6 +580,7 @@ public class CommitLog {
             // 存储时间，保证全局有序
             msg.setStoreTimestamp(beginLockTimestamp);
 
+            // 文件为null或者已满，创建新的文件
             if (null == mappedFile || mappedFile.isFull()) {
                 mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise
             }
@@ -1194,9 +1195,11 @@ public class CommitLog {
             // STORETIMESTAMP + STOREHOSTADDRESS + OFFSET <br>
 
             // PHY OFFSET
+            // commitlog实际物理偏移量是当前文件名的值+当前已写了的字节数
             long wroteOffset = fileFromOffset + byteBuffer.position();
 
             this.resetByteBuffer(hostHolder, 8);
+            // 根据broker的ip跟端口，当前已写的字节数生产msgId
             String msgId = MessageDecoder.createMessageId(this.msgIdMemory, msgInner.getStoreHostBytes(hostHolder), wroteOffset);
 
             // Record ConsumeQueue information
@@ -1244,9 +1247,11 @@ public class CommitLog {
 
             final int bodyLength = msgInner.getBody() == null ? 0 : msgInner.getBody().length;
 
+            //计算保存消息需要的长度
             final int msgLen = calMsgLength(bodyLength, topicLength, propertiesLength);
 
             // Exceeds the maximum message
+            // 大于默认最大值4M
             if (msgLen > this.maxMessageSize) {
                 CommitLog.log.warn("message size exceeded, msg total size: " + msgLen + ", msg body size: " + bodyLength
                     + ", maxMessageSize: " + this.maxMessageSize);
@@ -1254,6 +1259,7 @@ public class CommitLog {
             }
 
             // Determines whether there is sufficient free space
+            // 当前文件没有足够空间完成写入
             if ((msgLen + END_FILE_MIN_BLANK_LENGTH) > maxBlank) {
                 this.resetByteBuffer(this.msgStoreItemMemory, maxBlank);
                 // 1 TOTALSIZE

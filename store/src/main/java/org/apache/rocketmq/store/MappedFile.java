@@ -202,19 +202,24 @@ public class MappedFile extends ReferenceResource {
         assert messageExt != null;
         assert cb != null;
 
+        // 当前写了的字节数
         int currentPos = this.wrotePosition.get();
 
         if (currentPos < this.fileSize) {
+            // 如果开启了transientStorePoolEnable，则writeBuffer不为空，使用sendfile,未开启则使用mmap
             ByteBuffer byteBuffer = writeBuffer != null ? writeBuffer.slice() : this.mappedByteBuffer.slice();
+            // 定位到已写的位置
             byteBuffer.position(currentPos);
             AppendMessageResult result = null;
+            // 单个消息
             if (messageExt instanceof MessageExtBrokerInner) {
                 result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBrokerInner) messageExt);
-            } else if (messageExt instanceof MessageExtBatch) {
+            } else if (messageExt instanceof MessageExtBatch) {// 批量消息
                 result = cb.doAppend(this.getFileFromOffset(), byteBuffer, this.fileSize - currentPos, (MessageExtBatch) messageExt);
             } else {
                 return new AppendMessageResult(AppendMessageStatus.UNKNOWN_ERROR);
             }
+            // 更新已写字节数
             this.wrotePosition.addAndGet(result.getWroteBytes());
             this.storeTimestamp = result.getStoreTimestamp();
             return result;
