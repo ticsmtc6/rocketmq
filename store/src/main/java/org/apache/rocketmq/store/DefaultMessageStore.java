@@ -1763,6 +1763,7 @@ public class DefaultMessageStore implements MessageStore {
                     break;
                 }
 
+                // 根据偏移量reputFromOffset获取对应的ByteBuffer
                 SelectMappedBufferResult result = DefaultMessageStore.this.commitLog.getData(reputFromOffset);
                 if (result != null) {
                     try {

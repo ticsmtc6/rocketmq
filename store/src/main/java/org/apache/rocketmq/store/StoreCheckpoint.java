@@ -27,6 +27,9 @@ import org.apache.rocketmq.common.constant.LoggerName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 对应store目录下的checkpoint文件
+ */
 public class StoreCheckpoint {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.STORE_LOGGER_NAME);
     private final RandomAccessFile randomAccessFile;
@@ -63,6 +66,7 @@ public class StoreCheckpoint {
     }
 
     public void shutdown() {
+        // 退出时保持checkpoint
         this.flush();
 
         // unmap mappedByteBuffer

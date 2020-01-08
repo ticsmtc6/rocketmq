@@ -51,6 +51,7 @@ public abstract class ConfigManager {
         String fileName = null;
         try {
             fileName = this.configFilePath();
+            // 机器刚加入集群启动的时候，jsonString为Null，但没异常，因此照样会返回true，所以不会终止启动
             String jsonString = MixAll.file2String(fileName + ".bak");
             if (jsonString != null && jsonString.length() > 0) {
                 this.decode(jsonString);

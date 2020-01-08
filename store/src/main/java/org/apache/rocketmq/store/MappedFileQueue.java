@@ -222,6 +222,7 @@ public class MappedFileQueue {
             }
 
             if (mappedFile != null) {
+                // 当前ConsumeQueue对应的mappedFile是第一次创建（一般在group刚开始消费时）
                 if (this.mappedFiles.isEmpty()) {
                     mappedFile.setFirstCreateInQueue(true);
                 }

@@ -375,11 +375,16 @@ public class ConsumeQueue {
         return this.minLogicOffset / CQ_STORE_UNIT_SIZE;
     }
 
+    /**
+     * 重放对应位置的消息到ConsumeQueue
+     * @param request
+     */
     public void putMessagePositionInfoWrapper(DispatchRequest request) {
         final int maxRetries = 30;
         boolean canWrite = this.defaultMessageStore.getRunningFlags().isCQWriteable();
         for (int i = 0; i < maxRetries && canWrite; i++) {
             long tagsCode = request.getTagsCode();
+            // ConsumeQueueExt处理，默认是false即不处理
             if (isExtWriteEnable()) {
                 ConsumeQueueExt.CqExtUnit cqExtUnit = new ConsumeQueueExt.CqExtUnit();
                 cqExtUnit.setFilterBitMap(request.getBitMap());
@@ -420,6 +425,7 @@ public class ConsumeQueue {
     private boolean putMessagePositionInfo(final long offset, final int size, final long tagsCode,
         final long cqOffset) {
 
+        // offset小于maxPhysicOffset，说明该消息应当已经到了ConsumeQueue
         if (offset <= this.maxPhysicOffset) {
             return true;
         }
@@ -447,12 +453,14 @@ public class ConsumeQueue {
             if (cqOffset != 0) {
                 long currentLogicOffset = mappedFile.getWrotePosition() + mappedFile.getFileFromOffset();
 
+                // 待写入位置小于已写入位置，说明该消息已经重放
                 if (expectLogicOffset < currentLogicOffset) {
                     log.warn("Build  consume queue repeatedly, expectLogicOffset: {} currentLogicOffset: {} Topic: {} QID: {} Diff: {}",
                         expectLogicOffset, currentLogicOffset, this.topic, this.queueId, expectLogicOffset - currentLogicOffset);
                     return true;
                 }
 
+                // 待写入位置应该与已经写入位置匹配
                 if (expectLogicOffset != currentLogicOffset) {
                     LOG_ERROR.warn(
                         "[BUG]logic queue order maybe wrong, expectLogicOffset: {} currentLogicOffset: {} Topic: {} QID: {} Diff: {}",
@@ -464,7 +472,9 @@ public class ConsumeQueue {
                     );
                 }
             }
+            // 更新已经重放了的当前ConsumeQueue中对应的CommitLog最大偏移量
             this.maxPhysicOffset = offset;
+            // 将20个字节写入到ConsumeQueue对应的mappedFile
             return mappedFile.appendMessage(this.byteBufferIndex.array());
         }
         return false;
