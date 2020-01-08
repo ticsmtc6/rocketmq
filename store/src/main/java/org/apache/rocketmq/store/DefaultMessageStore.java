@@ -169,6 +169,7 @@ public class DefaultMessageStore implements MessageStore {
         boolean result = true;
 
         try {
+            // 如果临时文件存在，说明上一次是非正常退出，正常退出都会删除临时文件
             boolean lastExitOK = !this.isTempFileExist();
             log.info("last shutdown {}", lastExitOK ? "normally" : "abnormally");
 
@@ -234,6 +235,7 @@ public class DefaultMessageStore implements MessageStore {
 
         this.haService.start();
 
+        // 启动时创建abort临时文件
         this.createTempFile();
         this.addScheduleTask();
         this.shutdown = false;
@@ -268,6 +270,7 @@ public class DefaultMessageStore implements MessageStore {
             this.storeCheckpoint.shutdown();
 
             if (this.runningFlags.isWriteable() && dispatchBehindBytes() == 0) {
+                // 退出删除临时文件
                 this.deleteFile(StorePathConfigHelper.getAbortFile(this.messageStoreConfig.getStorePathRootDir()));
                 shutDownNormal = true;
             } else {
@@ -709,6 +712,7 @@ public class DefaultMessageStore implements MessageStore {
         HashMap<String, String> result = this.storeStatsService.getRuntimeInfo();
 
         {
+            // 统计commitlog磁盘使用
             String storePathPhysic = DefaultMessageStore.this.getMessageStoreConfig().getStorePathCommitLog();
             double physicRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathPhysic);
             result.put(RunningStats.commitLogDiskRatio.name(), String.valueOf(physicRatio));
@@ -716,7 +720,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         {
-
+            // 统计ConsumeQueue磁盘使用
             String storePathLogics = StorePathConfigHelper.getStorePathConsumeQueue(this.messageStoreConfig.getStorePathRootDir());
             double logicsRatio = UtilAll.getDiskPartitionSpaceUsedPercent(storePathLogics);
             result.put(RunningStats.consumeQueueDiskRatio.name(), String.valueOf(logicsRatio));
@@ -1247,6 +1251,10 @@ public class DefaultMessageStore implements MessageStore {
         }
     }
 
+    /**
+     * 判断临时文件store/abort文件是否存在
+     * @return
+     */
     private boolean isTempFileExist() {
         String fileName = StorePathConfigHelper.getAbortFile(this.messageStoreConfig.getStorePathRootDir());
         File file = new File(fileName);

@@ -31,18 +31,41 @@ public class BrokerPathConfigHelper {
         brokerConfigPath = path;
     }
 
+    /**
+     * topic元数据信息，读写队列书，权限等
+     * 文件路径store/config/topics.json
+     * @param rootDir
+     * @return
+     */
     public static String getTopicConfigPath(final String rootDir) {
         return rootDir + File.separator + "config" + File.separator + "topics.json";
     }
 
+    /**
+     * consumer已确认的offset
+     * 文件路径store/config/consumerOffset.json
+     * @param rootDir
+     * @return
+     */
     public static String getConsumerOffsetPath(final String rootDir) {
         return rootDir + File.separator + "config" + File.separator + "consumerOffset.json";
     }
 
+    /**
+     * 订阅组信息
+     * 文件路径store/config/subscriptionGroup.json
+     * @param rootDir
+     * @return
+     */
     public static String getSubscriptionGroupPath(final String rootDir) {
         return rootDir + File.separator + "config" + File.separator + "subscriptionGroup.json";
     }
 
+    /**
+     * 文件路径store/config/consumerFilter.json
+     * @param rootDir
+     * @return
+     */
     public static String getConsumerFilterPath(final String rootDir) {
         return rootDir + File.separator + "config" + File.separator + "consumerFilter.json";
     }
